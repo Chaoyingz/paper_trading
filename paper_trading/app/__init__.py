@@ -1,22 +1,17 @@
-from datetime import timedelta
-from logging.config import dictConfig
-
 from flask import Flask
 
-from ..config import config
-from ..tasks.base import init_tasks
-from .views import init_blue
+from paper_trading.settings import config
+from paper_trading.trade.pt_engine import MainEngine
+from paper_trading.tasks.base import init_tasks
+from paper_trading.app.views import init_blue
 
 
-def creat_app(config_name: str, engine):
-    __all__ = ["app"]
+def create_app():
     # 创建app实例前先配置好日志文件
-    dictConfig(config[config_name].LOG_FORMAT)
-    app = Flask(__name__)
-    app.config["SECRET_KEY"] = config[config_name].SECRET_KEY
+    app = Flask(__name__.split('.')[0], root_path=config.ROOT_PATH)
+    app.config.from_object(config)
 
-    # 设置session的保存时间。
-    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
+    engine = MainEngine()
 
     # 注册蓝本
     init_blue(app, engine)

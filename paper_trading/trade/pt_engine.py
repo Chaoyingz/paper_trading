@@ -14,12 +14,13 @@ from ..utility.event import EVENT_LOG, EVENT_ERROR, EVENT_MARKET_CLOSE
 from paper_trading.utility.constant import PersistanceMode
 from paper_trading.trade.market import ChinaAMarket
 from paper_trading.trade.account_engine import AccountEngine
+from paper_trading.settings import config
 
 
 class MainEngine:
     """模拟交易主引擎"""
 
-    def __init__(self, event_engine: EventEngine = None, market=None, param: dict = None):
+    def __init__(self, event_engine: EventEngine = None):
         # 绑定事件引擎
         if not event_engine:
             self.event_engine = EventEngine()
@@ -27,15 +28,15 @@ class MainEngine:
             self.event_engine = event_engine
         self.event_engine.start()
 
-        self._settings = SETTINGS  # 配置参数
+        # self._settings = SETTINGS  # 配置参数
         self.__active = False  # 主引擎状态
         self.pst_active = None  # 数据持久化开关
-        self._market = market  # 交易市场
+        self._market = config.market  # 交易市场
         self.account_engine = None  # 账户引擎
         self.order_put = None  # 订单回调函数
 
         # 更新参数
-        self._settings.update(param)
+        # self._settings.update(param)
 
         # 开启日志引擎
         log = LogEngine(self.event_engine)
@@ -66,9 +67,9 @@ class MainEngine:
         self._param_check()
 
         # 持久化配置
-        if self._settings["PERSISTENCE_MODE"] == PersistanceMode.REALTIME:
+        if config.PERSISTENCE_MODE == PersistanceMode.REALTIME:
             self.pst_active = True
-        elif self._settings["PERSISTENCE_MODE"] == PersistanceMode.MANUAL:
+        elif config.PERSISTENCE_MODE == PersistanceMode.MANUAL:
             self.pst_active = False
         else:
             raise ValueError("持久化参数错误")
@@ -80,7 +81,7 @@ class MainEngine:
         hq_client = self.creat_hq_api()
 
         # 账户引擎启动
-        self.account_engine = AccountEngine(self.event_engine, self.pst_active, self._settings["LOAD_DATA_MODE"], db)
+        self.account_engine = AccountEngine(self.event_engine, self.pst_active, config.LOAD_DATA_MODE, db)
         self.account_engine.start()
 
         # 默认使用ChinaAMarket
@@ -114,7 +115,7 @@ class MainEngine:
 
     def _param_check(self):
         """引擎工作参数检查"""
-        if not self._settings["PERSISTENCE_MODE"]:
+        if not config.PERSISTENCE_MODE:
             raise ValueError("数据持久化参数未配置")
 
     def on_orders_arrived(self, order):
@@ -139,8 +140,8 @@ class MainEngine:
 
     def creat_db(self):
         """实例化数据库"""
-        host = self._settings.get("MONGO_HOST", "localhost")
-        port = self._settings.get("MONGO_PORT", 27017)
+        host = config.MONGO_HOST
+        port = config.MONGO_PORT
         db = MongoDBService(host, port)
         db.connect_db()
         return db

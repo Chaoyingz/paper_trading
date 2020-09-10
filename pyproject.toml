@@ -43,6 +43,7 @@ tushare = "^1.2.40"
 ta-lib = "^0.4.18"
 matplotlib = "^3.2.2"
 mpl_finance = "^0.10.1"
+gunicorn = "^20.0.4"
 
 [tool.poetry.dev-dependencies]
 mkdocs = "^1.1.2"
